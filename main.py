@@ -145,6 +145,38 @@ def get_avg_audience_by_person_and_date(person, date, role):
 
 
 
+# def get_highest_avg_audience(date, role, limit=50):
+#     # 선택한 역할에 따라 해당하는 딕셔너리 선택
+#     if role == 'actor':
+#         data_dict = actor_avg_audience
+#     elif role == 'director':
+#         data_dict = director_avg_audience
+#     elif role == 'scriptwriter':
+#         data_dict = scriptwriter_avg_audience
+#     elif role == 'writer':
+#         data_dict = writer_avg_audience
+#     else:
+#         return []
+#
+#     # 선택한 날짜 이전까지의 평균 관객 수 가져오기
+#     avg_audience_dict = {}
+#     for person, data in data_dict.items():
+#         max_date = pd.to_datetime('1900-01-01')
+#         avg_audience = 0.0
+#         for date_key, audience in data.items():
+#             curr_date = pd.to_datetime(date_key)
+#             if curr_date <= date and curr_date > max_date:
+#                 max_date = curr_date
+#                 avg_audience = float(audience) if audience != '' else 0.0
+#         avg_audience_dict[person] = avg_audience
+#
+#     # 평균 관객 수를 기준으로 내림차순 정렬
+#     avg_audience = [(person, avg_audience) for person, avg_audience in avg_audience_dict.items()]
+#     avg_audience.sort(key=lambda x: x[1], reverse=True)
+#
+#     # 상위 limit개의 사람 이름과 관객 수의 리스트 반환
+#     return avg_audience[:limit]
+
 def get_highest_avg_audience(date, role, limit=50):
     # 선택한 역할에 따라 해당하는 딕셔너리 선택
     if role == 'actor':
@@ -165,8 +197,8 @@ def get_highest_avg_audience(date, role, limit=50):
         avg_audience = 0.0
         for date_key, audience in data.items():
             curr_date = pd.to_datetime(date_key)
-            if curr_date <= date and curr_date > max_date:
-                max_date = curr_date
+            if curr_date.date() <= date and curr_date.date() > max_date:
+                max_date = curr_date.date()
                 avg_audience = float(audience) if audience != '' else 0.0
         avg_audience_dict[person] = avg_audience
 
@@ -176,7 +208,6 @@ def get_highest_avg_audience(date, role, limit=50):
 
     # 상위 limit개의 사람 이름과 관객 수의 리스트 반환
     return avg_audience[:limit]
-
 
 
 def genre_to_onehot(input_genres):
@@ -487,7 +518,7 @@ with tab1:
         st.markdown('***')
 
         with st.spinner('AI가 예측중입니다...'):
-            prompt = generate_prompt(title, genres, director, ', '.join(cast), screenplay, original_work, runtime, rating,
+            prompt = generate_prompt(title, genres, director, ', '.join(cast), screenplay, original_work, runtime,rating ,
                                      num_screens, nationality,series_value,corona_value,total_data)
             ai_response = request_chat_completion(prompt)
 
