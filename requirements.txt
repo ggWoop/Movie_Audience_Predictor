@@ -1,0 +1,7 @@
+numpy
+pandas
+streamlit
+openai==0.27.8
+matplotlib
+seaborn
+python-supabase
