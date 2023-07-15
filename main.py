@@ -177,6 +177,8 @@ def get_avg_audience_by_person_and_date(person, date, role):
 #     # 상위 limit개의 사람 이름과 관객 수의 리스트 반환
 #     return avg_audience[:limit]
 
+from datetime import date as d_date # 이 라인을 맨 위에 추가하세요
+
 def get_highest_avg_audience(date, role, limit=50):
     # 선택한 역할에 따라 해당하는 딕셔너리 선택
     if role == 'actor':
@@ -193,7 +195,7 @@ def get_highest_avg_audience(date, role, limit=50):
     # 선택한 날짜 이전까지의 평균 관객 수 가져오기
     avg_audience_dict = {}
     for person, data in data_dict.items():
-        max_date = pd.to_datetime('1900-01-01')
+        max_date = d_date(1900, 1, 1) # 이 라인을 수정하세요
         avg_audience = 0.0
         for date_key, audience in data.items():
             curr_date = pd.to_datetime(date_key)
@@ -208,6 +210,7 @@ def get_highest_avg_audience(date, role, limit=50):
 
     # 상위 limit개의 사람 이름과 관객 수의 리스트 반환
     return avg_audience[:limit]
+
 
 
 def genre_to_onehot(input_genres):
