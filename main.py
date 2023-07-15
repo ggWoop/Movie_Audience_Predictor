@@ -105,7 +105,7 @@ def generate_prompt(title, genres, director, cast, screenplay, original_work,
     코로나 이후의 영화: 1은 코로나 이후에 개봉한 영화입니다.
     ------------------------------------------
     시리즈의 여부: 가 1이면 시리즈가 있다고 생각해주세요.
-    코로나의 이후의 영화: 가 1이면 코로나 이후의 영화입니다.
+    코로나의 이후의 영화: 가 0이면 코로나 이후의 영화입니다.
     """
 
 
@@ -331,11 +331,12 @@ with tab1:
 
     with col2:
 
-        # 시리즈물인지 입력받음
+        # 코로나 이전인지 이후인지 입력받음
         is_corona = st.checkbox("이 영화는 코로나 이후에 개봉 했습니까? (2019년 11월 17일)")
 
         # 체크박스의 값을 이용하여 0 또는 1로 저장
         corona_value = 1 if is_corona else 0
+
     st.markdown('***')
 
     # 입력한 데이터 출력
@@ -402,8 +403,8 @@ with tab1:
             'running_time': [runtime],
             'series_0': [1 if series_value == 0 else 0],
             'series_1': [1 if series_value == 1 else 0],
-            'corona_0': [1 if corona_value == 0 else 0],
-            'corona_1': [1 if corona_value == 1 else 0],
+            'corona_0': [1 if corona_value == 1 else 0],
+            'corona_1': [1 if corona_value == 0 else 0],
             '기타': [1 if nationality == '기타' else 0],
             '미국_캐나다': [1 if nationality == '미국_캐나다' else 0],
             '유럽': [1 if nationality == '유럽' else 0],
