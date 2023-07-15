@@ -5,4 +5,4 @@ openai==0.27.8
 matplotlib
 seaborn
 supabase==1.0.3
-scikit-learn==0.0.post5
+scikit-learn==1.2.2
