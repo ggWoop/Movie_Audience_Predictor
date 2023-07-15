@@ -4,4 +4,4 @@ streamlit
 openai==0.27.8
 matplotlib
 seaborn
-python-supabase
+supabase==1.0.3
