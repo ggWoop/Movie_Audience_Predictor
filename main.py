@@ -181,7 +181,7 @@ def get_highest_avg_audience(date, role, limit=50):
 
 def genre_to_onehot(input_genres):
     # 장르 컬럼 이름 목록
-    genre_columns = ['genre_ 스릴러', 'genre_ 액션', 'genre_SF', 'genre_가족', 'genre_공연', 'genre_공포',
+    genre_columns = ['genre_SF', 'genre_가족', 'genre_공연', 'genre_공포',
                      'genre_기타', 'genre_다큐멘터리', 'genre_드라마', 'genre_로맨스', 'genre_뮤지컬',
                      'genre_미스터리', 'genre_범죄', 'genre_사극', 'genre_서부극', 'genre_성인물',
                      'genre_스릴러', 'genre_애니메이션', 'genre_액션', 'genre_어드벤처', 'genre_전쟁',
@@ -414,7 +414,7 @@ with tab1:
         total_data = pd.DataFrame(new_data)
         # 원래 데이터의 피처 순서에 맞게 재정렬
         ordered_columns = ['running_time', 'screens', 'actor_changed', 'director_changed', 'scriptwriter_changed',
-                           'writer_changed', 'genre_ 스릴러', 'genre_ 액션', 'genre_SF', 'genre_가족', 'genre_공연',
+                           'writer_changed', 'genre_SF', 'genre_가족', 'genre_공연',
                            'genre_공포',
                            'genre_기타', 'genre_다큐멘터리', 'genre_드라마', 'genre_로맨스', 'genre_뮤지컬', 'genre_미스터리',
                            'genre_범죄',
