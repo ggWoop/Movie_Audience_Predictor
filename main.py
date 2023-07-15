@@ -7,7 +7,11 @@ import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.ticker as ticker
+import matplotlib.font_manager as fm
+
 from supabase import create_client
+from datetime import date as d_date # 이 라인을 맨 위에 추가하세요
+
 
 openai.api_key = st.secrets.OPENAI_TOKEN
 openai_model_version = "gpt-3.5-turbo-0613"
@@ -90,13 +94,15 @@ def generate_prompt(title, genres, director, cast, screenplay, original_work,
             영화의 국적: {nationality}
             머신러닝 으로 예측한 관객수: {total_data}
     ------------------------------------------
-    저희는 머신러닝을 이용해 사용자로부터 위 데이터를 입력받아 아직 상영되지 않은 영화의 관객수를 예측합니다.
-
-
-    위 데이터를 바탕으로 왜 이 영화가 어떻게 저 관객수가 나왔는지 자세히 설명해주세요.
-    당신의 생각을 자유롭게 말해도 좋습니다.
-    위에 써져있는 데이터들을 말해주지 말고 최대한 설명 해주세요.
-
+    이 모델은 사용자로부터 아직 개봉하지 않은 영화에 대해 위와 같은 데이터를 입력받은 뒤 머신러닝을 이용해 관객 수를 예측합니다.
+    사용자가 입력한 영화 제목과 예측된 관객 수를 언급하는 것을 시작으로 왜 이 영화가 그러한 관객 수로 예측되었는지 그 이유를 자세히 설명해주세요.
+    당신의 설명은 누가 들어도 합리적이고 타당해야 합니다. 입력된 데이터를 단순 반복하지 말고 사용자가 그 이유를 이해할 수 있도록 설명해주세요.
+    참고로 역대 개봉영화의 관객수의 중앙값은 1만명 정도이므로 관객수가 적게 예측됐더라도 단순히 망했다고 판단하면 안되며 가급적 긍정적인 메시지를 주도록 노력하세요.
+    
+    ------------------------------------------
+    
+    시리즈의 여부: 1은 같은 시리즈물이 예전에 1편 이상 개봉됐다고 가정합니다.
+    코로나 이후의 영화: 1은 코로나 이후에 개봉한 영화입니다.
     ------------------------------------------
     시리즈의 여부: 가 1이면 시리즈가 있다고 생각해주세요.
     코로나의 이후의 영화: 가 1이면 코로나 이후의 영화입니다.
@@ -145,39 +151,9 @@ def get_avg_audience_by_person_and_date(person, date, role):
 
 
 
-# def get_highest_avg_audience(date, role, limit=50):
-#     # 선택한 역할에 따라 해당하는 딕셔너리 선택
-#     if role == 'actor':
-#         data_dict = actor_avg_audience
-#     elif role == 'director':
-#         data_dict = director_avg_audience
-#     elif role == 'scriptwriter':
-#         data_dict = scriptwriter_avg_audience
-#     elif role == 'writer':
-#         data_dict = writer_avg_audience
-#     else:
-#         return []
-#
-#     # 선택한 날짜 이전까지의 평균 관객 수 가져오기
-#     avg_audience_dict = {}
-#     for person, data in data_dict.items():
-#         max_date = pd.to_datetime('1900-01-01')
-#         avg_audience = 0.0
-#         for date_key, audience in data.items():
-#             curr_date = pd.to_datetime(date_key)
-#             if curr_date <= date and curr_date > max_date:
-#                 max_date = curr_date
-#                 avg_audience = float(audience) if audience != '' else 0.0
-#         avg_audience_dict[person] = avg_audience
-#
-#     # 평균 관객 수를 기준으로 내림차순 정렬
-#     avg_audience = [(person, avg_audience) for person, avg_audience in avg_audience_dict.items()]
-#     avg_audience.sort(key=lambda x: x[1], reverse=True)
-#
-#     # 상위 limit개의 사람 이름과 관객 수의 리스트 반환
-#     return avg_audience[:limit]
 
-from datetime import date as d_date # 이 라인을 맨 위에 추가하세요
+
+
 
 def get_highest_avg_audience(date, role, limit=50):
     # 선택한 역할에 따라 해당하는 딕셔너리 선택
@@ -471,34 +447,83 @@ with tab1:
         st.markdown(f"## 당신의 영화의 예상 관객수는 : {formatted_predicted} 명 입니다.")
 
 
-        plt.rcParams['font.family'] = 'Malgun Gothic'
-        plt.rcParams['axes.unicode_minus'] = False
+        # plt.rcParams['font.family'] = 'Malgun Gothic'
+        # plt.rcParams['axes.unicode_minus'] = False
+        #
+        # df = pd.read_csv('./data/preprocessed.csv')
+        #
+        # # 모델이 반환한 예상 관객수
+        # predicted_audience = float(formatted_predicted.replace(',', ''))
+        #
+        #
+        #
+        # fig, ax = plt.subplots()
+        #
+        # sns.kdeplot(data=df, x="audience", bw_adjust=1.5, color='b', ax=ax, fill=True)
+        # ax.set_xlabel('관객수')
+        # ax.set_ylabel('확률밀도')
+        # ax.set_xscale('log')
+        #
+        # log_audience = np.log10(df['audience'])
+        #
+        # log_predicted_audience = np.log10(predicted_audience)
+        #
+        # closest_index = (np.abs(log_audience - log_predicted_audience)).idxmin()
+        # percentile = (closest_index / (len(df) - 1)) * 100
+        #
+        # plt.axvline(predicted_audience, color='red', linestyle='--',
+        #             label=f"예상 관객수: {predicted_audience:,.0f}명\n  (전체 상위 {percentile:.2f}%)")
+        # legend = ax.legend(bbox_to_anchor=(0.95, 0.7), loc='upper right', ncol=1)
+        # legend.get_texts()[0].set_color('green')
+        #
+        #
+        # def human_readable_number(x, pos):
+        #     if x >= 1e6:
+        #         return f"{x * 1e-6:.0f}M"
+        #     elif x >= 1e3:
+        #         return f"{x * 1e-3:.0f}k"
+        #     else:
+        #         return f"{x:.0f}"
+        #
+        #
+        # ax.xaxis.set_major_formatter(ticker.FuncFormatter(human_readable_number))
+        # ax.tick_params(axis='x', labelrotation=45)
+        #
+        # plt.title('영화 관객수 분포')
+        #
+        # # Streamlit에 plot을 표시
+        # st.pyplot(fig)
+        #
+        # st.markdown('***')
+
+
+
+        font_path = './data/NanumGothic.otf'  # the actual path to the font file
+        fontprop = fm.FontProperties(fname=font_path, size=15)
 
         df = pd.read_csv('./data/preprocessed.csv')
-
-        # 모델이 반환한 예상 관객수
         predicted_audience = float(formatted_predicted.replace(',', ''))
-
-
 
         fig, ax = plt.subplots()
 
         sns.kdeplot(data=df, x="audience", bw_adjust=1.5, color='b', ax=ax, fill=True)
-        ax.set_xlabel('관객수')
-        ax.set_ylabel('확률밀도')
+        ax.set_xlabel('관객수', fontproperties=fontprop)
+        ax.set_ylabel('확률밀도', fontproperties=fontprop)
         ax.set_xscale('log')
 
         log_audience = np.log10(df['audience'])
-
         log_predicted_audience = np.log10(predicted_audience)
-
         closest_index = (np.abs(log_audience - log_predicted_audience)).idxmin()
         percentile = (closest_index / (len(df) - 1)) * 100
 
-        plt.axvline(predicted_audience, color='red', linestyle='--',
-                    label=f"예상 관객수: {predicted_audience:,.0f}명\n  (전체 상위 {percentile:.2f}%)")
+        ax.axvline(predicted_audience, color='red', linestyle='--')
+        ax.text(predicted_audience, ax.get_ylim()[1] / 2,
+                f"예상 관객수: {predicted_audience:,.0f}명\n  (전체 상위 {percentile:.2f}%)",
+                color='red', fontproperties=fontprop)
+
         legend = ax.legend(bbox_to_anchor=(0.95, 0.7), loc='upper right', ncol=1)
-        legend.get_texts()[0].set_color('green')
+        for text in legend.get_texts():
+            text.set_fontproperties(fontprop)
 
 
         def human_readable_number(x, pos):
@@ -513,9 +538,8 @@ with tab1:
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(human_readable_number))
         ax.tick_params(axis='x', labelrotation=45)
 
-        plt.title('영화 관객수 분포')
+        plt.title('영화 관객수 분포', fontproperties=fontprop)
 
-        # Streamlit에 plot을 표시
         st.pyplot(fig)
 
         st.markdown('***')
