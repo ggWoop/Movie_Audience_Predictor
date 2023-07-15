@@ -28,21 +28,6 @@ supabase_client = init_connection()
 
 
 
-# # CSS
-# st.markdown("""
-#     <style>
-#         div[data-baseweb="input"] > div {
-#             background-color: #212425 !important;
-#         }
-#         div[data-baseweb="select"] > div {
-#             background-color: #212425 !important;
-#         }
-#         div[role="listbox"] ul {
-#             background-color: #212425 !important;
-#         }
-#     </style>
-#     """, unsafe_allow_html=True)
-
 
 
 
@@ -215,7 +200,10 @@ def genre_to_onehot(input_genres):
 genres_list = ['스릴러', '액션', 'SF', '가족', '공연', '공포', '기타', '다큐멘터리', '드라마', '로맨스', '뮤지컬', '미스터리', '범죄', '사극', '서부극',
                    '성인물', '애니메이션', '어드벤처', '전쟁', '코미디', '판타지']
 
+genres_list = sorted(genres_list, reverse=False)
+
 nationality_list = ['기타', '미국_캐나다', '유럽', '일본', '중국_대만_홍콩', '한국']
+nationality_list = sorted(nationality_list, reverse=False)
 
 rating_list = ['전체관람가', '12세관람가', '15세관람가', '청소년관람불가']
 
@@ -227,6 +215,13 @@ actor_avg_audience = dictionary_data['actor_avg_audience']
 director_avg_audience = dictionary_data['director_avg_audience']
 scriptwriter_avg_audience = dictionary_data['scriptwriter_avg_audience']
 writer_avg_audience = dictionary_data['writer_avg_audience']
+
+actor_avg_audience = dict(sorted(actor_avg_audience.items(), key=lambda item: item[0]))
+director_avg_audience = dict(sorted(director_avg_audience.items(), key=lambda item: item[0]))
+scriptwriter_avg_audience = dict(sorted(scriptwriter_avg_audience.items(), key=lambda item: item[0]))
+writer_avg_audience = dict(sorted(writer_avg_audience.items(), key=lambda item: item[0]))
+
+
 
 st.sidebar.markdown(
     """
@@ -240,53 +235,46 @@ from PIL import Image
 image = Image.open('./data/cinema.jpeg')
 st.image(image, use_column_width=True)
 
-st.markdown("## CineInsight : 당신의 영화를 에측 해드립니다. 🎥")
+st.markdown("## CineInsight : 당신의 영화를 예측 해드립니다. 🎥")
 st.markdown('***')
 
 
 
-tab1, tab2 = st.tabs(["영화 관객수 에측", "영화인 평균 관객수 보기"])
+tab1, tab2 = st.tabs(["영화 관객수 예측", "영화인 평균 관객수 보기"])
 
 with tab1:
     # 제목 입력
     title = st.text_input("영화 제목을 입력하세요.")
 
     # 장르 선택
-
     genres = st.multiselect("장르를 선택하세요. (최대 3개)", genres_list, max_selections=3)
 
-    # # 감독 선택
-    # director = st.selectbox("감독을 선택하세요.", list(director_list), index=director_list.index('봉준호'))
-    #
-    # # 주연 선택 (최대 3명까지)
-    # cast = st.multiselect("주연 배우를 선택하세요. (최대 3명)", list(actor_list), max_selections=3)
 
     # 감독 선택
-    director_list = list(dictionary_data['director_avg_audience'].keys())
-    director = st.selectbox("감독을 선택하세요.", director_list)
+    director_list = list(director_avg_audience.keys())
+    default_index = director_list.index('nan') if 'nan' in director_list else 0
+    director = st.selectbox("감독을 선택하세요.", director_list, index=default_index)
 
     # 주연 선택 (최대 3명까지)
-    actor_list = list(dictionary_data['actor_avg_audience'].keys())
-    cast = st.multiselect("주연 배우를 선택하세요. (최대 3명)", actor_list, max_selections=3)
-
-
-
+    actor_list = list(actor_avg_audience.keys())
+    if 'nan' not in actor_list:
+        actor_list.append('nan')
+    default_values = ['nan']
+    cast = st.multiselect("주연 배우를 선택하세요. (최대 3명)", actor_list, default=default_values)
 
     col1, col2 = st.columns(2)
 
     with col1:
         # screenplay = st.text_input("각본 작가의 이름을 입력하세요.")
         # 각본 작가 선택
-        scriptwriter_list = list(dictionary_data['scriptwriter_avg_audience'].keys())
-        screenplay = st.selectbox("각본 작가를 선택하세요.", scriptwriter_list)
+        scriptwriter_list = list(scriptwriter_avg_audience.keys())
+        default_index = scriptwriter_list.index('nan') if 'nan' in scriptwriter_list else 0
+        screenplay = st.selectbox("각본 작가를 선택하세요.", scriptwriter_list, index=default_index)
 
     with col2:
-        # original_work = st.text_input("원작자의 이름을 입력하세요.")
-        # 작가 선택
-        writer_list = list(dictionary_data['writer_avg_audience'].keys())
-        # "주호민"의 index 찾기
-        default_index = writer_list.index("주호민") if "주호민" in writer_list else 0
-
+        # 원작 선택
+        writer_list = list(writer_avg_audience.keys())
+        default_index = writer_list.index('nan') if 'nan' in writer_list else 0
         original_work = st.selectbox("원작자를 선택하세요.", writer_list, index=default_index)
 
     col1, col2 = st.columns(2)
@@ -330,9 +318,8 @@ with tab1:
         series_value = 1 if is_series else 0
 
     with col2:
-
-        # 코로나 이전인지 이후인지 입력받음
-        is_corona = st.checkbox("이 영화는 코로나 이후에 개봉 했습니까? (2019년 11월 17일)")
+        # 코로나 이후 개봉 여부를 입력받음, 기본 옵션 체크
+        is_corona = st.checkbox("이 영화는 코로나 해제일 이후에 개봉했습니까? (2022년 4월 24일)", value=True)
 
         # 체크박스의 값을 이용하여 0 또는 1로 저장
         corona_value = 1 if is_corona else 0
@@ -441,61 +428,13 @@ with tab1:
         # 예측
         predicted = model.predict(total_data)
 
-
+        predicted_int = int(predicted)
+        st.write(predicted_int)
 
         formatted_predicted = "{:,}".format(int(predicted[0]))
 
         st.markdown(f"## 당신의 영화의 예상 관객수는 : {formatted_predicted} 명 입니다.")
 
-
-        # plt.rcParams['font.family'] = 'Malgun Gothic'
-        # plt.rcParams['axes.unicode_minus'] = False
-        #
-        # df = pd.read_csv('./data/preprocessed.csv')
-        #
-        # # 모델이 반환한 예상 관객수
-        # predicted_audience = float(formatted_predicted.replace(',', ''))
-        #
-        #
-        #
-        # fig, ax = plt.subplots()
-        #
-        # sns.kdeplot(data=df, x="audience", bw_adjust=1.5, color='b', ax=ax, fill=True)
-        # ax.set_xlabel('관객수')
-        # ax.set_ylabel('확률밀도')
-        # ax.set_xscale('log')
-        #
-        # log_audience = np.log10(df['audience'])
-        #
-        # log_predicted_audience = np.log10(predicted_audience)
-        #
-        # closest_index = (np.abs(log_audience - log_predicted_audience)).idxmin()
-        # percentile = (closest_index / (len(df) - 1)) * 100
-        #
-        # plt.axvline(predicted_audience, color='red', linestyle='--',
-        #             label=f"예상 관객수: {predicted_audience:,.0f}명\n  (전체 상위 {percentile:.2f}%)")
-        # legend = ax.legend(bbox_to_anchor=(0.95, 0.7), loc='upper right', ncol=1)
-        # legend.get_texts()[0].set_color('green')
-        #
-        #
-        # def human_readable_number(x, pos):
-        #     if x >= 1e6:
-        #         return f"{x * 1e-6:.0f}M"
-        #     elif x >= 1e3:
-        #         return f"{x * 1e-3:.0f}k"
-        #     else:
-        #         return f"{x:.0f}"
-        #
-        #
-        # ax.xaxis.set_major_formatter(ticker.FuncFormatter(human_readable_number))
-        # ax.tick_params(axis='x', labelrotation=45)
-        #
-        # plt.title('영화 관객수 분포')
-        #
-        # # Streamlit에 plot을 표시
-        # st.pyplot(fig)
-        #
-        # st.markdown('***')
 
 
 
@@ -547,7 +486,7 @@ with tab1:
 
         with st.spinner('AI가 예측중입니다...'):
             prompt = generate_prompt(title, genres, director, ', '.join(cast), screenplay, original_work, runtime,rating ,
-                                     num_screens, nationality,series_value,corona_value,total_data)
+                                     num_screens, nationality,series_value,corona_value,predicted_int)
             ai_response = request_chat_completion(prompt)
 
             # st.text_area(
@@ -592,10 +531,10 @@ with tab2:
 
 
 
-    st.markdown('<span style="color:white;font-size:35px;">특정인 특정시점 평균관객수 출력</span>', unsafe_allow_html=True)
+    st.markdown('<span style="color:white;font-size:35px;">영화인 흥행력 탐구</span>', unsafe_allow_html=True)
 
     with st.container():
-        choice = st.selectbox("직업을 선택하세요.", ['actor', 'director', 'scriptwriter', 'writer'], key='choice1')
+        choice = st.selectbox("직종을 선택하세요.", ['actor', 'director', 'scriptwriter', 'writer'], key='choice1')
 
         # 선택한 직업에 따라 데이터 선택
         if choice == 'actor':
@@ -609,7 +548,7 @@ with tab2:
 
         # 선택한 데이터로부터 감독 목록 생성
         director_list = list(selected_data.keys())
-        director_p2 = st.selectbox("감독을 선택하세요.", director_list, key='director_p2')
+        director_p2 = st.selectbox("영화인을 선택하세요.", director_list, key='director_p2')
 
         selected_date = st.date_input("날짜를 선택하세요.")
 
@@ -621,13 +560,13 @@ with tab2:
     st.markdown("---")
 
     with st.container():
-        st.markdown('<span style="color:white;font-size:35px;">특정시점 특정역할 상위명단 출력</span>', unsafe_allow_html=True)
+        st.markdown('<span style="color:white;font-size:35px;">직종별 흥행력 Top 10 영화인</span>', unsafe_allow_html=True)
 
         
         # 특정 날짜와 역할 입력
         selected_date_p3 = st.date_input("날짜를 선택하세요.",key='selected_date_p3')
 
-        choice_p3 = st.selectbox("직업을 선택하세요.", ['actor', 'director', 'scriptwriter', 'writer'], key='choice2')
+        choice_p3 = st.selectbox("직종을 선택하세요.", ['actor', 'director', 'scriptwriter', 'writer'], key='choice2')
 
         # 선택한 직업에 따라 데이터 선택
         if choice_p3 == 'actor':
@@ -645,8 +584,8 @@ with tab2:
 
         for idx, (person, avg_audience) in enumerate(result, start=1):
             formatted_avg_audience = "{:,.0f}".format(avg_audience)
-            st.write(f" {idx}. {person}")
-
+            # st.write(f" {idx}. {person}")
+            st.write(f"{idx}. {person} :  평균 관객 수: {formatted_avg_audience}명")
 
 
 
