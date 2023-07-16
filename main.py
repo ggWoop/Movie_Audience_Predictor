@@ -197,13 +197,16 @@ def draw_graph(predicted_value):
             return f"{x:.0f}"
 
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(human_readable_number))
+    ax.tick_params(axis='x', which='minor', bottom=False)
     ax.tick_params(axis='x', labelrotation=45, colors='white')
     ax.tick_params(axis='y', colors='white')
+    plt.tight_layout()
+    ax.spines['top'].set_color('none')
+    ax.spines['right'].set_color('none')
     ax.spines['left'].set_color('white')
     ax.spines['bottom'].set_color('white')
     ax.xaxis.label.set_color('white')
     ax.yaxis.label.set_color('white')
-
     plt.title('영화 관객수 분포', fontproperties=fontprop, color='white')
     st.pyplot(fig)
 
@@ -229,6 +232,7 @@ director_avg_audience = dict(sorted(director_avg_audience.items(), key=lambda it
 scriptwriter_avg_audience = dict(sorted(scriptwriter_avg_audience.items(), key=lambda item: item[0]))
 writer_avg_audience = dict(sorted(writer_avg_audience.items(), key=lambda item: item[0]))
 
+
 # nan 항목을 체크하고 맨 앞으로 이동
 if 'nan' in scriptwriter_avg_audience:
     scriptwriter_avg_audience = {'nan': scriptwriter_avg_audience['nan'], **{k: v for k, v in scriptwriter_avg_audience.items() if k != 'nan'}}
@@ -246,12 +250,12 @@ if 'nan' in writer_avg_audience:
 
 st.markdown(
     """
-    <style>
-    .sidebar .sidebar-content {
-        width: 100%;
-    }
-    </style>
-    """,
+<style>
+.sidebar .sidebar-content {
+    width: 100%;
+}
+</style>
+""",
     unsafe_allow_html=True
 )
 
@@ -323,14 +327,9 @@ with st.sidebar:
             nationality = st.selectbox("영화의 국적을 선택하세요.", nationality_list, index=5)
 
 
-        col1, col2 = st.columns(2)
-
-        with col1:
-            # 시리즈물인지 입력받음
-            is_series = st.checkbox("이 영화는 시리즈물입니까?")
-
-            # 체크박스의 값을 이용하여 0 또는 1로 저장
-            series_value = 1 if is_series else 0
+        # 시리즈물인지 입력받음
+        is_series = st.checkbox("이 영화는 시리즈물입니까?")
+        series_value = 1 if is_series else 0
 
         st.markdown('***')
  
@@ -387,8 +386,33 @@ with st.sidebar:
                 line = f"{idx}. {person}"
                 line = f"<div style='display: flex; justify-content: space-between; margin-left: 10%; margin-right: 10%;'>{line}<div style='text-align: right;'>{formatted_avg_audience} 명</div></div>"
                 st.markdown(line, unsafe_allow_html=True)
+# col1, col2, col3 = st.columns(3)
+# with col2:
+#     st.write()
+#     image = Image.open('./data/logo.png')
+#     st.image(image)
 
-st.markdown("<h1 style='text-align: center; font-size: 48px;'>CineInsight</h1>", unsafe_allow_html=True)
+# st.markdown("<h1 style='text-align: center; font-size: 48px;'>CineInsight</h1>", unsafe_allow_html=True)
+
+
+st.markdown(
+    """
+    <link href='https://fonts.googleapis.com/css2?family=Tangerine:wght@700&display=swap' rel='stylesheet'>
+    <style>
+    h1 {
+        text-align: center;
+        font-size: 70px;
+        font-family: 'Tangerine', cursive;
+        font-weight: 800;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+st.markdown("<h1>CineInsight 📽</h1>", unsafe_allow_html=True)
+
+
 st.write()
 placeholder = st.empty()
 
@@ -407,8 +431,8 @@ with placeholder.container():
     </div>
     '''
     st.markdown(youtube_embed_code, unsafe_allow_html=True)
-    st.write()
-    st.markdown("<h2 style='text-align: center;'>영화 흥행 성적을 예측해 드립니다</h2>", unsafe_allow_html=True)
+    st.markdown('\n\n')
+    st.markdown("<h2 style='text-align: center;'>🍿🥤 영화 흥행 성적을 예측해 드립니다 🥤🍿</h2>", unsafe_allow_html=True)
 
 # 입력한 데이터 출력
 if predict_button:
@@ -542,7 +566,7 @@ if predict_button:
 
     col1, col2, col3 = st.columns([8, 1, 8])
     with col1:
-        st.markdown("\n\n")
+        st.markdown("\n\n\n\n")
         draw_graph(formatted_predicted)
 
     # st.markdown('***')
@@ -557,7 +581,7 @@ if predict_button:
                 label="",
                 value=ai_response,
                 placeholder="아직 예측되지 않았습니다.",
-                height=800
+                height=600
             )
 
     movie_data = {
