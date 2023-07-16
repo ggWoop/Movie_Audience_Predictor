@@ -269,7 +269,7 @@ with st.sidebar:
         if 'nan' not in actor_list:
             actor_list.append('nan')
         default_values = ['nan']
-        cast = st.multiselect("주연 배우를 선택하세요. (최대 3명)", actor_list, default=default_values)
+        cast = st.multiselect("주연 배우를 선택하세요. (최대 3명)", actor_list, default=default_values, max_selections=3)
 
         col1, col2 = st.columns(2)
 
