@@ -1,5 +1,5 @@
-#[theme]
-#backgroundColor="#000000"
-#secondaryBackgroundColor="#606060"
-#textColor="#d6ed17"
-#font="monospace"
+[theme]
+backgroundColor="#6f7fcf"
+secondaryBackgroundColor="#3e488b"
+textColor="#FFFFFF"
+font="apple-system"
