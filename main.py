@@ -229,6 +229,12 @@ director_avg_audience = dict(sorted(director_avg_audience.items(), key=lambda it
 scriptwriter_avg_audience = dict(sorted(scriptwriter_avg_audience.items(), key=lambda item: item[0]))
 writer_avg_audience = dict(sorted(writer_avg_audience.items(), key=lambda item: item[0]))
 
+# nan 항목을 체크하고 맨 앞으로 이동
+if 'nan' in scriptwriter_avg_audience:
+    scriptwriter_avg_audience = {'nan': scriptwriter_avg_audience['nan'], **{k: v for k, v in scriptwriter_avg_audience.items() if k != 'nan'}}
+
+if 'nan' in writer_avg_audience:
+    writer_avg_audience = {'nan': writer_avg_audience['nan'], **{k: v for k, v in writer_avg_audience.items() if k != 'nan'}}
 
 
 # st.sidebar.markdown(
