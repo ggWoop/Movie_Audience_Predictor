@@ -566,7 +566,10 @@ if predict_button:
 
     col1, col2, col3 = st.columns([8, 1, 8])
     with col1:
-        st.markdown("\n\n\n\n")
+        st.markdown("\n\n")
+        st.markdown("\n\n")
+        st.markdown(f"<h5 style='text-align: center;'>역대 개봉영화 대비 예상 흥행률</h5>", unsafe_allow_html=True)
+        st.markdown("\n\n\n")
         draw_graph(formatted_predicted)
 
     # st.markdown('***')
