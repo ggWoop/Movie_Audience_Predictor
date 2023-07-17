@@ -91,31 +91,62 @@ def request_chat_completion(prompt):
     )
     return response["choices"][0]["message"]["content"]
 
+def normalize_names(name):
+    names = re.split(r',\s*', name)
+    sorted_names = sorted(names)
+    return ', '.join(sorted_names)
 
 def get_avg_audience_by_person_and_date(person, date, role):
+    names = re.split(r',\s*', person)
+    if role == 'director':
+        names = [normalize_names(name) for name in names]  # 감독에만 이름 정규화 적용
+
+    def name_match(dictionary):
+        for name in names:
+            if name not in dictionary:
+                return False
+        return True
+
+    def is_number(s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
+
     if role == 'actor':
-        person_dict = actor_avg_audience.get(person, {})
+        matching_dicts = [value for key, value in actor_avg_audience.items() if name_match(key)]
     elif role == 'director':
-        person_dict = director_avg_audience.get(person, {})
+        matching_dicts = [value for key, value in director_avg_audience.items() if name_match(key)]
     elif role == 'scriptwriter':
-        person_dict = scriptwriter_avg_audience.get(person, {})
+        matching_dicts = [value for key, value in scriptwriter_avg_audience.items() if name_match(key)]
     elif role == 'writer':
-        person_dict = writer_avg_audience.get(person, {})
+        matching_dicts = [value for key, value in writer_avg_audience.items() if name_match(key)]
     else:
         return 0
 
-    closest_date = None
-    for release_date in person_dict.keys():
-        if release_date <= pd.Timestamp(date) and (closest_date is None or release_date > closest_date):
-            closest_date = release_date
+    if not matching_dicts:
+        return 0
 
-    if closest_date is not None:
-        return person_dict[closest_date]
+    max_value = -1
+    for person_dict in matching_dicts:
+        closest_date = None
+        for release_date in person_dict.keys():
+            if release_date <= pd.Timestamp(date) and (closest_date is None or release_date > closest_date):
+                closest_date = release_date
+
+        if closest_date is not None:
+            value_str = person_dict[closest_date]
+            if is_number(value_str):  # 숫자인지 확인
+                value = int(value_str)  # 문자열 값을 정수로 변환
+                max_value = max(max_value, value)
+
+    if max_value > -1:
+        return max_value
     else:
         return 0
 
-
-def get_highest_avg_audience(date, role, limit=50):
+def get_highest_avg_audience(date, role, limit=10):
     if role == 'actor':
         data_dict = actor_avg_audience
     elif role == 'director':
@@ -340,29 +371,53 @@ with st.sidebar:
         # st.subheader('영화인 흥행력 탐구')
 
         with st.container():
-            choice_dict = {'배우': 'actor_avg_audience', '감독': 'director_avg_audience', '각본': 'scriptwriter_avg_audience', '원작': 'writer_avg_audience'}
+            choice_dict = {
+                '배우': 'actor_avg_audience',
+                '감독': 'director_avg_audience',
+                '각본': 'scriptwriter_avg_audience',
+                '원작': 'writer_avg_audience'
+            }
+            
             choice = st.selectbox("직종을 선택하세요.", list(choice_dict.keys()), key='choice1')
-            selected_data = dictionary_data[choice_dict[choice]]  # 선택한 직종에 따른 데이터 선택
 
-            # 선택한 데이터로부터 영화인 목록 생성
+            def process_person_data(person_data):
+                for person_name in list(person_data):
+                    if ', ' in person_name:
+                        names = person_name.split(', ')
+                        names.sort()
+                        person_data[', '.join(names)] = person_data.pop(person_name)
+                return person_data
+
+            selected_data = process_person_data(dictionary_data[choice_dict[choice]])
+
             person_list = list(selected_data.keys())
-            person_list = sorted(person_list, key=lambda x: re.sub(r'[^가-힣a-zA-Z]', '', x)) 
-            person_list = [person for person in person_list if person != 'nan' and selected_data[person] != 0]
- 
-            default_index = 0 if person_list else None  
+            person_list = sorted(person_list, key=lambda x: re.sub(r'[^가-힣a-zA-Z]', '', x))
+            person_list = [
+                person for person in person_list
+                if person != 'nan' and selected_data[person] != 0
+            ]
+
+            default_index = 0 if person_list else None
             person_p2 = st.selectbox("영화인을 선택하세요.", person_list, index=default_index, key='person_p2')
 
             selected_date = st.date_input("날짜를 선택하세요.")
-
-            choice_eng = {'배우': 'actor', '감독': 'director', '각본': 'scriptwriter', '원작': 'writer'}[choice]
+            
+            choice_eng = {
+                '배우': 'actor',
+                '감독': 'director',
+                '각본': 'scriptwriter',
+                '원작': 'writer'
+            }[choice]
 
             avg_audience = get_avg_audience_by_person_and_date(person_p2, selected_date, choice_eng)
+            
             if isinstance(avg_audience, str):
                 formatted_avg_audience = avg_audience
             else:
                 formatted_avg_audience = "{:,.0f}".format(avg_audience)
 
             st.write(f"{person_p2}의 선택 시점 평균 관객수는 {formatted_avg_audience} 명입니다.")
+
 
         st.markdown("---")
 
@@ -512,8 +567,6 @@ if predict_button:
         'running_time': [runtime],
         'series_0': [1 if series_value == 0 else 0],
         'series_1': [1 if series_value == 1 else 0],
-        'corona_0': [1 if corona_value == 0 else 0],
-        'corona_1': [1 if corona_value == 1 else 0],
         '기타': [1 if nationality == '기타' else 0],
         '미국_캐나다': [1 if nationality == '미국_캐나다' else 0],
         '유럽': [1 if nationality == '유럽' else 0],
@@ -541,7 +594,7 @@ if predict_button:
                     'genre_사극', 'genre_서부극', 'genre_성인물', 'genre_스릴러', 'genre_애니메이션', 'genre_액션',
                     'genre_어드벤처',
                     'genre_전쟁', 'genre_코미디', 'genre_판타지', 'series_0', 'series_1', '기타', '미국_캐나다', '유럽', '일본',
-                    '중국_대만_홍콩', '한국', '12세관람가', '15세관람가', '전체관람가', '청소년관람불가', 'corona_0', 'corona_1']
+                    '중국_대만_홍콩', '한국', '12세관람가', '15세관람가', '전체관람가', '청소년관람불가']
     total_data = total_data.reindex(columns=ordered_columns)
 
     with open('./data/model.pkl', 'rb') as file:
@@ -581,10 +634,11 @@ if predict_button:
 
             # st.markdown("<h6 style='text-align: center;'>관객수 예측 분석 결과</h6>", unsafe_allow_html=True)
             st.text_area(
-                label="",
+                label="AI가 예측 결과를 분석 중입니다...",
                 value=ai_response,
-                placeholder="아직 예측되지 않았습니다.",
-                height=600
+                placeholder="AI가 예측 결과를 분석 중입니다...",
+                height=600,
+                label_visibility="collapsed"
             )
 
     movie_data = {
@@ -606,6 +660,3 @@ if predict_button:
 
 
     response = supabase_client.table("movie_audience_forecast").insert(movie_data).execute()
-
-
-
