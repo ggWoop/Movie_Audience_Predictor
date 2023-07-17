@@ -207,7 +207,7 @@ def draw_graph(predicted_value):
     ax.spines['bottom'].set_color('white')
     ax.xaxis.label.set_color('white')
     ax.yaxis.label.set_color('white')
-    plt.title('영화 관객수 분포', fontproperties=fontprop, color='white')
+
     st.pyplot(fig)
 
 genres_list = ['스릴러', '액션', 'SF', '가족', '공연', '공포', '기타', '다큐멘터리', '드라마', '로맨스', '뮤지컬', '미스터리', '범죄', '사극', '서부극',
