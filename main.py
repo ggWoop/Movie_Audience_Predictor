@@ -309,12 +309,10 @@ with st.sidebar:
         default_index = director_list.index('nan') if 'nan' in director_list else 0
         director = st.selectbox("감독을 선택하세요.", director_list, index=default_index)
 
+
         # 주연 선택 (최대 3명까지)
         actor_list = list(actor_avg_audience.keys())
-        if 'nan' not in actor_list:
-            actor_list.append('nan')
-        default_values = ['nan']
-        cast = st.multiselect("주연 배우를 선택하세요. (최대 3명)", actor_list, default=default_values, max_selections=3)
+        cast = st.multiselect("주연 배우를 선택하세요. (최대 3명)", actor_list, max_selections=3)
 
         col1, col2 = st.columns(2)
 
