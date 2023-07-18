@@ -331,7 +331,7 @@ with st.sidebar:
 
         with col1:
             # 런타임 입력
-            runtime = st.number_input("상영 시간을 입력하세요 (분)", min_value=1)
+            runtime = st.number_input("상영 시간을 입력하세요 (분)", min_value=1, value=100)
 
             # 입력한 시간을 카테고리로 변환
             if runtime < 90:
@@ -343,7 +343,7 @@ with st.sidebar:
 
         with col2:
             # 스크린수 입력
-            num_screens = st.number_input("상영 스크린 수를 입력하세요.", min_value=1)
+            num_screens = st.number_input("상영 스크린 수를 입력하세요.", min_value=1, value=50)
 
         col1, col2 = st.columns(2)
 
