@@ -18,6 +18,7 @@ st.set_page_config(layout="wide")
 openai.api_key = st.secrets.OPENAI_TOKEN
 openai_model_version = "gpt-3.5-turbo"
 
+
 # Supabase setup
 @st.cache_resource
 def init_connection():
@@ -28,12 +29,10 @@ def init_connection():
 
 supabase_client = init_connection()
 
-
 with open('./css/wave.css') as f:
     css = f.read()
 
 st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
-
 
 # 저장된 피클 파일 경로
 pickle_file = './data/dictionary_data.pkl'
@@ -41,19 +40,21 @@ pickle_file = './data/dictionary_data.pkl'
 with open(pickle_file, 'rb') as file:
     dictionary_data = pickle.load(file)
 
+
 def read_unique_nationalities(file_path):
     nationalities = []
     with open(file_path, 'r', encoding='utf-8-sig') as file:
         reader = csv.reader(file)
 
         for row in reader:
-            nationality = row[0] 
+            nationality = row[0]
             nationalities.append(nationality)
     return nationalities
 
+
 def generate_prompt(title, genres, director, cast, screenplay, original_work,
                     runtime, rating, num_screens, nationality,
-                    series_value,total_data):
+                    series_value, total_data):
     prompt = f"""
             제목: {title}
             장르: {''.join(genres)}
@@ -72,7 +73,7 @@ def generate_prompt(title, genres, director, cast, screenplay, original_work,
     사용자가 입력한 영화 제목과 예측된 관객 수를 언급하는 것을 시작으로 왜 이 영화가 그러한 관객 수로 예측되었는지 그 이유를 설명해주세요.
     당신의 설명은 누가 들어도 합리적이고 타당해야 합니다. 사실 여부가 불분명한 부분은 언급하지 말고 특히 없는 사실을 지어내지 마세요.
     관객수가 적게 예측됐더라도 가급적 긍정적인 메시지를 주도록 노력하세요.
-    
+
     ------------------------------------------
     영화의 국적: 열거된 여러 나라 중 하나입니다.
     시리즈의 여부: 1은 같은 시리즈물이 예전에 1편 이상 개봉됐습니다.
@@ -91,10 +92,12 @@ def request_chat_completion(prompt):
     )
     return response["choices"][0]["message"]["content"]
 
+
 def normalize_names(name):
     names = re.split(r',\s*', name)
     sorted_names = sorted(names)
     return ', '.join(sorted_names)
+
 
 def get_avg_audience_by_person_and_date(person, date, role):
     names = re.split(r',\s*', person)
@@ -146,6 +149,7 @@ def get_avg_audience_by_person_and_date(person, date, role):
     else:
         return 0
 
+
 def get_highest_avg_audience(date, role, limit=10):
     if role == 'actor':
         data_dict = actor_avg_audience
@@ -192,6 +196,7 @@ def genre_to_onehot(input_genres):
             genre_dict[genre] = [1]  # 해당 장르 값 설정
 
     return genre_dict
+
 
 def draw_graph(predicted_value):
     font_path = './data/NanumGothic.otf'
@@ -241,8 +246,9 @@ def draw_graph(predicted_value):
 
     st.pyplot(fig)
 
+
 genres_list = ['스릴러', '액션', 'SF', '가족', '공연', '공포', '기타', '다큐멘터리', '드라마', '로맨스', '뮤지컬', '미스터리', '범죄', '사극', '서부극',
-                   '성인물', '애니메이션', '어드벤처', '전쟁', '코미디', '판타지']
+               '성인물', '애니메이션', '어드벤처', '전쟁', '코미디', '판타지']
 
 genres_list = sorted(genres_list, reverse=False)
 
@@ -250,7 +256,6 @@ nationality_list = ['기타', '미국_캐나다', '유럽', '일본', '중국_�
 nationality_list = sorted(nationality_list, reverse=False)
 
 rating_list = ['전체관람가', '12세관람가', '15세관람가', '청소년관람불가']
-
 
 # 각 딕셔너리에 접근
 actor_avg_audience = dictionary_data['actor_avg_audience']
@@ -263,14 +268,14 @@ director_avg_audience = dict(sorted(director_avg_audience.items(), key=lambda it
 scriptwriter_avg_audience = dict(sorted(scriptwriter_avg_audience.items(), key=lambda item: item[0]))
 writer_avg_audience = dict(sorted(writer_avg_audience.items(), key=lambda item: item[0]))
 
-
 # nan 항목을 체크하고 맨 앞으로 이동
 if 'nan' in scriptwriter_avg_audience:
-    scriptwriter_avg_audience = {'nan': scriptwriter_avg_audience['nan'], **{k: v for k, v in scriptwriter_avg_audience.items() if k != 'nan'}}
+    scriptwriter_avg_audience = {'nan': scriptwriter_avg_audience['nan'],
+                                 **{k: v for k, v in scriptwriter_avg_audience.items() if k != 'nan'}}
 
 if 'nan' in writer_avg_audience:
-    writer_avg_audience = {'nan': writer_avg_audience['nan'], **{k: v for k, v in writer_avg_audience.items() if k != 'nan'}}
-
+    writer_avg_audience = {'nan': writer_avg_audience['nan'],
+                           **{k: v for k, v in writer_avg_audience.items() if k != 'nan'}}
 
 # st.sidebar.markdown(
 #     """
@@ -298,7 +303,6 @@ with st.sidebar:
 
         # 장르 선택
         genres = st.multiselect("장르를 선택하세요. (최대 3개)", genres_list, max_selections=3)
-
 
         # 감독 선택
         director_list = list(director_avg_audience.keys())
@@ -357,15 +361,20 @@ with st.sidebar:
 
             nationality = st.selectbox("영화의 국적을 선택하세요.", nationality_list, index=5)
 
+        col1, col2 = st.columns(2)
 
-        # 시리즈물인지 입력받음
-        is_series = st.checkbox("이 영화는 시리즈물입니까?")
-        series_value = 1 if is_series else 0
+        with col1:
+            # 시리즈물인지 입력받음
+            is_series = st.checkbox("이 영화는 시리즈물입니까?")
+            series_value = 1 if is_series else 0
+
+        with col2:
+            is_ai = st.checkbox("AI 분석결과를 보시겠습니까?", value=True)
+            ai_value = 1 if is_ai else 0
 
         st.markdown('***')
- 
-        predict_button = st.button(label="영화 관객수 예측")
 
+        predict_button = st.button(label="영화 관객수 예측")
 
     with tab2:
         # st.subheader('영화인 흥행력 탐구')
@@ -377,8 +386,9 @@ with st.sidebar:
                 '각본': 'scriptwriter_avg_audience',
                 '원작': 'writer_avg_audience'
             }
-            
+
             choice = st.selectbox("직종을 선택하세요.", list(choice_dict.keys()), key='choice1')
+
 
             def process_person_data(person_data):
                 for person_name in list(person_data):
@@ -387,6 +397,7 @@ with st.sidebar:
                         names.sort()
                         person_data[', '.join(names)] = person_data.pop(person_name)
                 return person_data
+
 
             selected_data = process_person_data(dictionary_data[choice_dict[choice]])
 
@@ -401,7 +412,7 @@ with st.sidebar:
             person_p2 = st.selectbox("영화인을 선택하세요.", person_list, index=default_index, key='person_p2')
 
             selected_date = st.date_input("날짜를 선택하세요.")
-            
+
             choice_eng = {
                 '배우': 'actor',
                 '감독': 'director',
@@ -410,7 +421,7 @@ with st.sidebar:
             }[choice]
 
             avg_audience = get_avg_audience_by_person_and_date(person_p2, selected_date, choice_eng)
-            
+
             if isinstance(avg_audience, str):
                 formatted_avg_audience = avg_audience
             else:
@@ -418,13 +429,13 @@ with st.sidebar:
 
             st.write(f"{person_p2}의 선택 시점 평균 관객수는 {formatted_avg_audience} 명입니다.")
 
-
         st.markdown("---")
 
         with st.container():
             st.subheader('영화인 흥행력 TOP 10')
 
-            choice_p3_dict = {'배우': 'actor_avg_audience', '감독': 'director_avg_audience', '각본': 'scriptwriter_avg_audience', '원작': 'writer_avg_audience'}
+            choice_p3_dict = {'배우': 'actor_avg_audience', '감독': 'director_avg_audience',
+                              '각본': 'scriptwriter_avg_audience', '원작': 'writer_avg_audience'}
             choice_p3 = st.selectbox("직종을 선택하세요.", list(choice_p3_dict.keys()), key='choice2')
             selected_data_p3 = dictionary_data[choice_p3_dict[choice_p3]]  # 선택한 직종에 따른 데이터 선택
 
@@ -467,7 +478,6 @@ st.markdown(
 
 st.markdown("<h1>CineInsight 📽</h1>", unsafe_allow_html=True)
 
-
 st.write()
 placeholder = st.empty()
 
@@ -498,10 +508,8 @@ if predict_button:
     genres_str = ", ".join(genres)
     cast_data = ", ".join(cast)
 
-
     # cast_list 생성
     cast_list = [name.strip() for name in cast]  # 공백 제거
-
 
     total_actor_avg_audience = []
     for name in cast_list:
@@ -549,7 +557,6 @@ if predict_button:
     for column in ['screens', 'director_changed', 'scriptwriter_changed', 'writer_changed']:
         new_data[column] = scaler_dict[column].transform(new_data[[column]])
 
-
     # st.write(new_data)
     # st.write(genre_to_onehot(genres))
 
@@ -559,8 +566,6 @@ if predict_button:
     # 두 데이터프레임 합치기
     new_data = pd.concat([new_data, genre_data], axis=1)
     total_data = pd.DataFrame(genre_data)
-
-
 
     # 딕셔너리 생성
     extra_data = {
@@ -587,19 +592,19 @@ if predict_button:
     total_data = pd.DataFrame(new_data)
     # 원래 데이터의 피처 순서에 맞게 재정렬
     ordered_columns = ['running_time', 'screens', 'actor_changed', 'director_changed', 'scriptwriter_changed',
-                    'writer_changed', 'genre_SF', 'genre_가족', 'genre_공연',
-                    'genre_공포',
-                    'genre_기타', 'genre_다큐멘터리', 'genre_드라마', 'genre_로맨스', 'genre_뮤지컬', 'genre_미스터리',
-                    'genre_범죄',
-                    'genre_사극', 'genre_서부극', 'genre_성인물', 'genre_스릴러', 'genre_애니메이션', 'genre_액션',
-                    'genre_어드벤처',
-                    'genre_전쟁', 'genre_코미디', 'genre_판타지', 'series_0', 'series_1', '기타', '미국_캐나다', '유럽', '일본',
-                    '중국_대만_홍콩', '한국', '12세관람가', '15세관람가', '전체관람가', '청소년관람불가']
+                       'writer_changed', 'genre_SF', 'genre_가족', 'genre_공연',
+                       'genre_공포',
+                       'genre_기타', 'genre_다큐멘터리', 'genre_드라마', 'genre_로맨스', 'genre_뮤지컬', 'genre_미스터리',
+                       'genre_범죄',
+                       'genre_사극', 'genre_서부극', 'genre_성인물', 'genre_스릴러', 'genre_애니메이션', 'genre_액션',
+                       'genre_어드벤처',
+                       'genre_전쟁', 'genre_코미디', 'genre_판타지', 'series_0', 'series_1', '기타', '미국_캐나다', '유럽', '일본',
+                       '중국_대만_홍콩', '한국', '12세관람가', '15세관람가', '전체관람가', '청소년관람불가']
     total_data = total_data.reindex(columns=ordered_columns)
 
     with open('./data/model.pkl', 'rb') as file:
         model = pickle.load(file)
-# 예측
+    # 예측
     predicted = model.predict(total_data)
 
     predicted_int = int(predicted)
@@ -612,34 +617,44 @@ if predict_button:
     else:
         title_text = "이 영화의"
 
-    st.markdown(f"<h2 style='text-align: center;'>{title_text} 예상 관객 수는 {formatted_predicted} 명입니다.</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center;'>{title_text} 예상 관객 수는 {formatted_predicted} 명입니다.</h2>",
+                unsafe_allow_html=True)
     st.write()
 
     # st.markdown("---")
 
-    col1, col2, col3 = st.columns([8, 1, 8])
-    with col1:
-        st.markdown("\n\n")
-        st.markdown("\n\n")
-        st.markdown(f"<h5 style='text-align: center;'>역대 개봉영화 대비 예상 흥행률</h5>", unsafe_allow_html=True)
-        st.markdown("\n\n\n")
-        draw_graph(formatted_predicted)
+    if ai_value == 1:
+        col1, _, col3 = st.columns([8, 1, 8])
+        with col1:
+            st.markdown("\n\n")
+            st.markdown("\n\n")
+            st.markdown(f"<h5 style='text-align: center;'>역대 개봉영화 대비 예상 흥행률</h5>", unsafe_allow_html=True)
+            st.markdown("\n\n\n")
+            draw_graph(formatted_predicted)
 
-    # st.markdown('***')
-    with col3:
-        with st.spinner('AI가 예측 결과를 분석 중입니다...'):
-            prompt = generate_prompt(title, genres, director, ', '.join(cast), screenplay, original_work, runtime,rating ,
-                                        num_screens, nationality,series_value,predicted_int)
-            ai_response = request_chat_completion(prompt)
+        with col3:
+            with st.spinner('AI가 예측 결과를 분석 중입니다...'):
+                prompt = generate_prompt(title, genres, director, ', '.join(cast), screenplay, original_work, runtime,
+                                         rating,
+                                         num_screens, nationality, series_value, predicted_int)
+                ai_response = request_chat_completion(prompt)
 
-            # st.markdown("<h6 style='text-align: center;'>관객수 예측 분석 결과</h6>", unsafe_allow_html=True)
-            st.text_area(
-                label="AI가 예측 결과를 분석 중입니다...",
-                value=ai_response,
-                placeholder="AI가 예측 결과를 분석 중입니다...",
-                height=600,
-                label_visibility="collapsed"
-            )
+                st.text_area(
+                    label="AI가 예측 결과를 분석 중입니다...",
+                    value=ai_response,
+                    placeholder="AI가 예측 결과를 분석 중입니다...",
+                    height=600,
+                    label_visibility="collapsed"
+                )
+    else:
+        ai_response = ''
+        _, col2, _ = st.columns([3, 8, 3])
+        with col2:
+            st.markdown("\n\n")
+            st.markdown("\n\n")
+            st.markdown(f"<h4 style='text-align: center;'>역대 개봉영화 대비 예상 흥행률</h4>", unsafe_allow_html=True)
+            st.markdown("\n\n\n")
+            draw_graph(formatted_predicted)
 
     movie_data = {
         "title": title,
@@ -653,10 +668,9 @@ if predict_button:
         "num_screens": num_screens,
         "nationality": nationality,
         "series_value": series_value,
-        'corona_value' : corona_value,
+        'corona_value': corona_value,
         "gpt": ai_response,
 
     }
-
 
     response = supabase_client.table("movie_audience_forecast").insert(movie_data).execute()
